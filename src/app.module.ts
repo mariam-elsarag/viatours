@@ -11,6 +11,7 @@ import { MailModule } from './mail/mail.module';
   imports: [
     AuthModule,
     UsersModule,
+    MailModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -38,7 +39,6 @@ import { MailModule } from './mail/mail.module';
       },
     }),
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-    MailModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },

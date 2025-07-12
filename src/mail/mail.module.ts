@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
-import { MailService } from './mail.service';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
+import { MailService } from './mail.service';
 import { join } from 'path';
+import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
+
+//we added to nest-cli json code to make watch template folder
 @Module({
   imports: [
     MailerModule.forRootAsync({
@@ -12,21 +13,20 @@ import { join } from 'path';
       useFactory: (config: ConfigService) => ({
         transport: {
           service: 'Gmail',
-          secure:
-            config.get<string>('NODE_ENV') === 'development' ? false : true,
+          secure: false,
           auth: {
             user: config.get<string>('EMAIL_USER'),
             pass: config.get<string>('EMAIL_PASSWORD'),
           },
-          defaults: {
-            from: '"viatours" <no-reply@viatours.com>',
-          },
-          template: {
-            dir: join(__dirname, 'templates'),
-            adapter: new EjsAdapter({
-              inlineCssEnabled: true,
-            }),
-          },
+        },
+        defaults: {
+          from: '"My App" <no-reply@myapp.com>',
+        },
+        template: {
+          dir: join(__dirname, 'templates'),
+          adapter: new EjsAdapter({
+            inlineCssEnabled: true,
+          }),
         },
       }),
     }),
