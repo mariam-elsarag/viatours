@@ -1,0 +1,29 @@
+
+
+
+
+
+
+
+
+
+
+src/
+├── auth/
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   └── jwt.strategy.ts
+├── users/
+│   ├── users.controller.ts
+│   └── users.service.ts
+├── destinations/
+├── packages/
+├── bookings/
+├── reviews/
+├── common/
+│   ├── guards/
+│   ├── interceptors/
+│   ├── pipes/
+├── config/
+│   └── database.config.ts
+└── main.ts
