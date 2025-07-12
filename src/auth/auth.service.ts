@@ -71,15 +71,7 @@ export class AuthService {
   async login(body: LoginDto) {
     const { email, password } = body;
     //check if user exist
-    const user = await this.userRepository.findOne({
-      where: { email: email.toLocaleLowerCase() },
-    });
-
-    if (!user) {
-      throw new BadRequestException(
-        'The email or password you entered is incorrect.',
-      );
-    }
+    const user = await this.checkUserExist(email);
     if (!user.isActive) {
       if (user.otpExpiredAt && this.isOtpExpire(user.otpExpiredAt)) {
         const otp = await this.generateOtp(3, user);
@@ -118,12 +110,7 @@ export class AuthService {
   async sendOtp(body: SendOtpDto, query: OtpQueryDto) {
     const { email } = body;
     //check if user exist
-    const user = await this.userRepository.findOne({
-      where: { email: email.toLocaleLowerCase() },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    const user = await this.checkUserExist(email);
 
     const otp = await this.generateOtp(3, user);
 
@@ -135,15 +122,16 @@ export class AuthService {
     return { message: 'OTP sent successfully' };
   }
 
+  /**
+   * verify otp
+   * @param body
+   * @param query type (forget, activate) by default it work as activate
+   * @returns message
+   */
   async verifyOtp(body: VerifyOtpDto, query: OtpQueryDto) {
     const { email, otp } = body;
     // find this user
-    const user = await this.userRepository.findOne({
-      where: { email: email.toLocaleLowerCase() },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    const user = await this.checkUserExist(email);
 
     // check if he has no otp
     if (!user.otp || !user.otpExpiredAt) {
@@ -168,6 +156,28 @@ export class AuthService {
     await this.userRepository.save(user);
     return { message: 'OTP verified successfully' };
   }
+
+  async resetPassword(body: LoginDto) {
+    const { email, password } = body;
+    const user = await this.checkUserExist(email);
+    if (!user.isActive) {
+      throw new BadRequestException(
+        'Please activate your account before changing  password',
+      );
+    }
+    if (!user.isForgetPassword && !user.otp) {
+      throw new BadRequestException(
+        'Please verify the OTP before changing your password',
+      );
+    }
+
+    const hashPassword = await this.hashPassword(password);
+    user.password = hashPassword;
+    user.passwordChangedAt = new Date();
+    user.isForgetPassword = false;
+    await this.userRepository.save(user);
+    return { message: 'Password changed successfully' };
+  }
   /**
    * Hash password
    * @param password
@@ -176,6 +186,13 @@ export class AuthService {
   private async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
+  }
+
+  private async comparePassword(
+    password: string,
+    hashPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(password, hashPassword);
   }
 
   /**
@@ -202,14 +219,19 @@ export class AuthService {
     return otp;
   }
 
-  private async comparePassword(
-    password: string,
-    hashPassword: string,
-  ): Promise<boolean> {
-    return await bcrypt.compare(password, hashPassword);
-  }
-
   private isOtpExpire(otpExpireAt: Date): boolean {
     return otpExpireAt.getTime() < Date.now();
+  }
+
+  private async checkUserExist(email: string) {
+    //check if user exist
+    const user = await this.userRepository.findOne({
+      where: { email: email.toLocaleLowerCase() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }

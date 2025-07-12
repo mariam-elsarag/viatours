@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -46,5 +47,12 @@ export class AuthController {
   @AcceptFormData()
   async verifyOtp(@Body() body: VerifyOtpDto, @Query() query: OtpQueryDto) {
     return this.authService.verifyOtp(body, query);
+  }
+
+  //Patch:/api/auth/reset-password
+  @Patch('reset-password')
+  @AcceptFormData()
+  async resetPassword(@Body() body: LoginDto) {
+    return this.authService.resetPassword(body);
   }
 }

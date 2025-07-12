@@ -4,7 +4,7 @@ import {
   IsStrongPassword,
   IsNotEmpty,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 export class LoginDto {
   @IsEmail()
   @MaxLength(80)
@@ -15,18 +15,26 @@ export class LoginDto {
   @IsNotEmpty()
   password: string;
 }
+
+@Exclude()
 export class LoginResponseDto {
+  @Expose()
   @Transform(({ obj }) => obj.id)
   userId: number;
 
+  @Expose()
   token: string;
 
+  @Expose()
   fullName: string;
 
+  @Expose()
   email: string;
 
+  @Expose()
   role: string;
 
+  @Expose()
   avatar: string | null;
 
   constructor(partial: Partial<LoginResponseDto>) {
