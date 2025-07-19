@@ -228,7 +228,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: { email: email.toLocaleLowerCase() },
     });
-
+    console.log(user, 'user');
     if (!user) {
       throw new NotFoundException('User not found');
     }
