@@ -7,11 +7,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { User } from './users/entities/user.entity';
 import { MailModule } from './mail/mail.module';
+import { AgentModule } from './agent/agent.module';
+import { LocationModule } from './location/location.module';
+import { Agent } from './agent/entities/agent.entity';
+import { Location } from './location/entities/location.entity';
 @Module({
   imports: [
     AuthModule,
     UsersModule,
     MailModule,
+    LocationModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -34,11 +39,13 @@ import { MailModule } from './mail/mail.module';
           port: config.get<number>('DB_PORT'),
           host: 'localhost',
           synchronize: process.env.NODE_ENV !== 'producation' ? true : false,
-          entities: [User],
+          entities: [User, Agent, Location],
         };
       },
     }),
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    AgentModule,
+    LocationModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },

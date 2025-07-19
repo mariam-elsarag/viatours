@@ -12,7 +12,7 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { User } from 'src/users/entities/user.entity';
 import { CURETNT_USER_KEY } from 'src/utils/constant';
-import { userRole } from 'src/utils/enum';
+import { AccountStatus, userRole } from 'src/utils/enum';
 import { JwtReturnTypePayload } from 'src/utils/types';
 import { Repository } from 'typeorm';
 
@@ -52,12 +52,21 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('User not found.');
       }
       //check if user activate account
-      if (!user.isActive) {
+      if (user.status === AccountStatus.Pending) {
         throw new UnauthorizedException(
           'Your account is not active. Please verify your account first.',
         );
       }
-
+      if (user.status === AccountStatus.Suspended) {
+        throw new UnauthorizedException(
+          'Your account has been suspended. Please contact support for more information.',
+        );
+      }
+      if (user.status === AccountStatus.Banned) {
+        throw new UnauthorizedException(
+          'Your account has been permanently banned due to a violation of our terms.',
+        );
+      }
       // check password change after change IAT
       if (this.isTokenBeforePasswordChange(user, payload.iat)) {
         throw new UnauthorizedException('Invalid or expired token.');

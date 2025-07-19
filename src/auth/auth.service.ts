@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtPayload } from 'src/utils/types';
 import { RegisterDto } from './dto/register.dto';
 
-import { userRole } from 'src/utils/enum';
+import { AccountStatus, userRole } from 'src/utils/enum';
 import { MailService } from 'src/mail/mail.service';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { OtpQueryDto, SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
@@ -72,7 +73,7 @@ export class AuthService {
     const { email, password } = body;
     //check if user exist
     const user = await this.checkUserExist(email);
-    if (!user.isActive) {
+    if (user.status === AccountStatus.Pending) {
       if (user.otpExpiredAt && this.isOtpExpire(user.otpExpiredAt)) {
         const otp = await this.generateOtp(3, user);
         await this.mailerService.activateAccountEmail(
@@ -83,6 +84,16 @@ export class AuthService {
       }
       throw new BadRequestException(
         'Your account is not active. Please verify your account first. An OTP has been sent to your email for verification.',
+      );
+    }
+    if (user.status === AccountStatus.Suspended) {
+      throw new ForbiddenException(
+        'Your account has been suspended. Please contact support for more information.',
+      );
+    }
+    if (user.status === AccountStatus.Banned) {
+      throw new ForbiddenException(
+        'Your account has been permanently banned due to a violation of our terms.',
       );
     }
     // check password right
@@ -147,9 +158,9 @@ export class AuthService {
     }
 
     if (query.type === 'forget') {
-      user.isForgetPassword = true;
+      user.isPasswordReset = true;
     } else {
-      user.isActive = true;
+      user.status = AccountStatus.Active;
       user.otpExpiredAt = null;
     }
     user.otp = null;
@@ -160,12 +171,12 @@ export class AuthService {
   async resetPassword(body: LoginDto) {
     const { email, password } = body;
     const user = await this.checkUserExist(email);
-    if (!user.isActive) {
+    if (user.status === AccountStatus.Pending) {
       throw new BadRequestException(
         'Please activate your account before changing  password',
       );
     }
-    if (!user.isForgetPassword && !user.otp) {
+    if (!user.isPasswordReset && !user.otp) {
       throw new BadRequestException(
         'Please verify the OTP before changing your password',
       );
@@ -174,7 +185,7 @@ export class AuthService {
     const hashPassword = await this.hashPassword(password);
     user.password = hashPassword;
     user.passwordChangedAt = new Date();
-    user.isForgetPassword = false;
+    user.isPasswordReset = false;
     await this.userRepository.save(user);
     return { message: 'Password changed successfully' };
   }

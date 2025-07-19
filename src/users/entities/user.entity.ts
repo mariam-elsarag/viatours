@@ -1,6 +1,16 @@
-import { CURENT_TIMESTAMP } from 'src/utils/constant';
-import { userRole } from 'src/utils/enum';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Agent } from 'src/agent/entities/agent.entity';
+import { Location } from 'src/location/entities/location.entity';
+import { AccountStatus, userRole } from 'src/utils/enum';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'users' })
 export class User {
@@ -10,7 +20,8 @@ export class User {
   @Column({ type: 'varchar', length: 80 })
   fullName: string;
 
-  @Column({ type: 'varchar', length: 80, unique: true })
+  @Index()
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
   @Column({ type: 'enum', enum: userRole, default: userRole.User })
@@ -19,11 +30,15 @@ export class User {
   @Column({ type: 'varchar', nullable: true, default: null })
   avatar: string | null;
 
-  @Column({ type: 'boolean', default: false })
-  isActive: boolean;
+  @Column({
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.Pending,
+  })
+  status: AccountStatus;
 
   @Column({ type: 'boolean', default: false })
-  isForgetPassword: boolean;
+  isPasswordReset: boolean;
 
   @Column({ type: 'varchar', length: 60, nullable: true })
   password: string | null;
@@ -37,13 +52,16 @@ export class User {
   @Column({ type: 'timestamp', nullable: true, default: null })
   otpExpiredAt: Date | null;
 
-  @Column({ type: 'timestamp', default: () => CURENT_TIMESTAMP })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({
-    type: 'timestamp',
-    default: () => CURENT_TIMESTAMP,
-    onUpdate: CURENT_TIMESTAMP,
-  })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
+
+  @OneToOne(() => Agent, (agent) => agent.user)
+  agent: Agent;
+
+  @OneToOne(() => Location)
+  @JoinColumn()
+  location: Location;
 }

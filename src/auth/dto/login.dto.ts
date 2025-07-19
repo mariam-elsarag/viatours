@@ -7,7 +7,7 @@ import {
 import { Exclude, Expose, Transform } from 'class-transformer';
 export class LoginDto {
   @IsEmail()
-  @MaxLength(80)
+  @MaxLength(255)
   @IsNotEmpty()
   email: string;
 

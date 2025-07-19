@@ -16,7 +16,7 @@ export class RegisterDto {
   fullName: string;
 
   @IsEmail()
-  @MaxLength(80)
+  @MaxLength(255)
   @IsNotEmpty()
   email: string;
 
