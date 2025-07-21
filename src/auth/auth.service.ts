@@ -12,15 +12,18 @@ import * as bcrypt from 'bcrypt';
 import { JwtPayload } from 'src/utils/types';
 import { RegisterDto } from './dto/register.dto';
 
-import { AccountStatus, userRole } from 'src/utils/enum';
+import { AccountStatus, AgentStatus, userRole } from 'src/utils/enum';
 import { MailService } from 'src/mail/mail.service';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { OtpQueryDto, SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailService,
   ) {}
@@ -31,7 +34,7 @@ export class AuthService {
    * @returns message explain that otp has send to user email
    */
   async register(body: RegisterDto) {
-    const { fullName, email, password, role } = body;
+    const { fullName, email, password, role, licenseNumber } = body;
 
     // check user exist
     const user = await this.userRepository.findOne({
@@ -53,6 +56,14 @@ export class AuthService {
     });
 
     newUser = await this.userRepository.save(newUser);
+    // create agent
+    if (role === userRole.Agent) {
+      const newAgent = this.agentRepository.create({
+        userId: newUser.id,
+        licenseNumber,
+      });
+      await this.agentRepository.save(newAgent);
+    }
 
     // for activate account
     const otp = await this.generateOtp(3, newUser);
@@ -86,6 +97,7 @@ export class AuthService {
         'Your account is not active. Please verify your account first. An OTP has been sent to your email for verification.',
       );
     }
+
     if (user.status === AccountStatus.Suspended) {
       throw new ForbiddenException(
         'Your account has been suspended. Please contact support for more information.',
@@ -105,7 +117,10 @@ export class AuthService {
         'The email or password you entered is incorrect.',
       );
     }
-
+    // check if agent user try to login and he is not having permission to login
+    if (user.role === userRole.Agent) {
+      await this.checkAgentCanAccess(user.id);
+    }
     const payload: JwtPayload = { id: user.id, role: user.role };
     const token = await this.generateJwtToken(payload);
 
@@ -122,7 +137,9 @@ export class AuthService {
     const { email } = body;
     //check if user exist
     const user = await this.checkUserExist(email);
-
+    if (user.role === userRole.Agent) {
+      await this.checkAgentCanAccess(user.id);
+    }
     const otp = await this.generateOtp(3, user);
 
     if (query.type === 'forget') {
@@ -143,7 +160,9 @@ export class AuthService {
     const { email, otp } = body;
     // find this user
     const user = await this.checkUserExist(email);
-
+    if (user.role === userRole.Agent) {
+      await this.checkAgentCanAccess(user.id);
+    }
     // check if he has no otp
     if (!user.otp || !user.otpExpiredAt) {
       throw new BadRequestException('No OTP was generated for this user');
@@ -171,6 +190,9 @@ export class AuthService {
   async resetPassword(body: LoginDto) {
     const { email, password } = body;
     const user = await this.checkUserExist(email);
+    if (user.role === userRole.Agent) {
+      await this.checkAgentCanAccess(user.id);
+    }
     if (user.status === AccountStatus.Pending) {
       throw new BadRequestException(
         'Please activate your account before changing  password',
@@ -239,10 +261,33 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: { email: email.toLocaleLowerCase() },
     });
-    console.log(user, 'user');
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+  private async checkAgentCanAccess(userId: number) {
+    const agent = await this.agentRepository.findOne({
+      where: { userId },
+    });
+
+    if (!agent) {
+      throw new NotFoundException('Agent profile not found.');
+    }
+
+    switch (agent.status) {
+      case AgentStatus.PENDING:
+        throw new BadRequestException('Your account is pending approval.');
+      case AgentStatus.SUSPENDED:
+        throw new BadRequestException('Your account has been suspended.');
+      case AgentStatus.REJECTED:
+        throw new BadRequestException('Your account has been rejected.');
+      case AgentStatus.ACTIVE:
+        return agent;
+      default:
+        throw new BadRequestException('Your account status is invalid.');
+    }
+    return agent;
   }
 }

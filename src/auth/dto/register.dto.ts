@@ -7,6 +7,7 @@ import {
   IsStrongPassword,
   IsNotEmpty,
   IsOptional,
+  ValidateIf,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -27,4 +28,10 @@ export class RegisterDto {
   @IsEnum([userRole.User, userRole.Agent], { message: 'Invalid role' })
   @IsOptional()
   role?: userRole.User | userRole.Agent;
+
+  @ValidateIf((o) => o.role === userRole.Agent)
+  @IsString()
+  @MaxLength(20)
+  @IsNotEmpty({ message: 'License number is required for agents.' })
+  licenseNumber: string;
 }

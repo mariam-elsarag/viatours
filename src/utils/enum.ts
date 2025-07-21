@@ -12,7 +12,8 @@ export enum AccountStatus {
 }
 
 export enum AgentStatus {
+  PENDING = 'pending',
   ACTIVE = 'active',
   SUSPENDED = 'suspended',
-  BANNED = 'banned',
+  REJECTED = 'rejected',
 }
