@@ -20,9 +20,6 @@ export class Agent {
   @Column({ type: 'varchar', length: 80, nullable: true })
   companyName: string | null;
 
-  @Column({ type: 'varchar', nullable: true, default: null })
-  companyLogo: string | null;
-
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
@@ -41,16 +38,13 @@ export class Agent {
   @Column({ type: 'enum', enum: AgentStatus, default: AgentStatus.PENDING })
   status: AgentStatus;
 
-  @Column({ nullable: true })
-  address: string;
-
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @OneToOne(() => User, (user) => user.agent)
+  @OneToOne(() => User, (user) => user.agent, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 

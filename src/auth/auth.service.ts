@@ -16,7 +16,7 @@ import { AccountStatus, AgentStatus, userRole } from 'src/utils/enum';
 import { MailService } from 'src/mail/mail.service';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { OtpQueryDto, SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
-import { Agent } from 'src/agent/entities/agent.entity';
+import { Agent } from 'src/users/entities/agent.entity';
 
 @Injectable()
 export class AuthService {

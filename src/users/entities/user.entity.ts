@@ -1,4 +1,4 @@
-import { Agent } from 'src/agent/entities/agent.entity';
+import { Agent } from 'src/users/entities/agent.entity';
 import { Location } from 'src/location/entities/location.entity';
 import { AccountStatus, userRole } from 'src/utils/enum';
 import {
@@ -30,6 +30,9 @@ export class User {
   @Column({ type: 'varchar', nullable: true, default: null })
   avatar: string | null;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, default: null })
+  address: string | null;
+
   @Column({
     type: 'enum',
     enum: AccountStatus,
@@ -58,7 +61,7 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @OneToOne(() => Agent, (agent) => agent.user)
+  @OneToOne(() => Agent, (agent) => agent.user, { cascade: true })
   agent: Agent;
 
   @OneToOne(() => Location)

@@ -21,15 +21,16 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly reflactor: Reflector,
+    private readonly reflector: Reflector,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
   async canActivate(context: ExecutionContext) {
-    const roles: userRole[] = this.reflactor.getAllAndOverride<userRole[]>(
+    const roles: userRole[] = this.reflector.getAllAndOverride<userRole[]>(
       'roles',
       [context.getHandler(), context.getClass()],
     );
+
     const req: Request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(req);
     if (!token) {
@@ -50,6 +51,13 @@ export class AuthGuard implements CanActivate {
       // check if user exist
       if (!user) {
         throw new UnauthorizedException('User not found.');
+      }
+
+      // check if this endpoint has authorization if yes and role if user not equal to type we want we will have exception
+      if (roles && roles.length > 0 && !roles.includes(user.role)) {
+        throw new UnauthorizedException(
+          'You are not allowed to perform this action.',
+        );
       }
       //check if user activate account
       if (user.status === AccountStatus.Pending) {
@@ -72,12 +80,6 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid or expired token.');
       }
 
-      // check if this endpoint has authorization if yes and role if user not equal to type we want we will have exception
-      if (roles && roles.length > 0 && !roles.includes(user.role)) {
-        throw new UnauthorizedException(
-          'You are not allowed to perform this action.',
-        );
-      }
       req[CURETNT_USER_KEY] = user;
       return true;
     } catch (error) {
