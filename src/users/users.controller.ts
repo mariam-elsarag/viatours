@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -18,6 +19,7 @@ import { currentUser, Roles } from 'src/auth/decorators/auth.decrators';
 import { JwtPayload } from 'src/utils/types';
 import { AcceptFormData } from 'src/common/decorators/accept-form-data.decorator';
 import { userRole } from 'src/utils/enum';
+import { FilterUserListDto } from './dto/user-query.dto';
 
 @Controller('/api/user/')
 export class UsersController {
@@ -52,6 +54,15 @@ export class UsersController {
   deleteAccount(@currentUser() payload: JwtPayload) {
     return this.usersService.remove(payload);
   }
+
+  // Get user list by admin
+  @Get('/admin')
+  @UseGuards(AuthGuard)
+  @Roles(userRole.ADMIN)
+  getUsersList(@Query() query: FilterUserListDto) {
+    return this.usersService.findAllUsers(query);
+  }
+
   // Delete by admin
   @Delete('/admin/:id')
   @Roles(userRole.ADMIN)

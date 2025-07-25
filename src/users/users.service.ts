@@ -6,13 +6,14 @@ import {
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Agent } from './entities/agent.entity';
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { JwtPayload } from 'src/utils/types';
 import { UserResponseDto } from './dto/user-response.dto';
 import { userRole } from 'src/utils/enum';
 import { AgentResponseDto } from './dto/agent-response.dto';
+import { FilterUserListDto } from './dto/user-query.dto';
 
 @Injectable()
 export class UsersService {
@@ -56,6 +57,24 @@ export class UsersService {
     }
 
     return new UserResponseDto(user);
+  }
+
+  async findAllUsers(query?: FilterUserListDto) {
+    const { role, search } = query ?? {};
+
+    const qb = this.userRepository.createQueryBuilder('user');
+
+    if (role) {
+      qb.andWhere('user.role = :role', { role: role });
+    }
+
+    if (search) {
+      qb.andWhere('(user.fullName ILIKE :search OR user.email ILIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    return qb.orderBy('user.createdAt', 'DESC').getMany();
   }
 
   async updateProfile(body: UpdateProfileDto, payload: JwtPayload) {
