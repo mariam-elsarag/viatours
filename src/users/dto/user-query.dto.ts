@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsNumber, IsNumberString, IsOptional } from 'class-validator';
 import { userRole } from 'src/utils/enum';
 
 export class FilterUserListDto {
@@ -7,5 +7,13 @@ export class FilterUserListDto {
   role?: userRole;
 
   @IsOptional()
-  search?: string | null;
+  search?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  page?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  limit?: string;
 }

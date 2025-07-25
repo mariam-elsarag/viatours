@@ -14,6 +14,8 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { userRole } from 'src/utils/enum';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { FilterUserListDto } from './dto/user-query.dto';
+import { FullPaginationDto } from 'src/common/pagination/pagination.dto';
+import { Request } from 'express';
 
 @Injectable()
 export class UsersService {
@@ -59,13 +61,16 @@ export class UsersService {
     return new UserResponseDto(user);
   }
 
-  async findAllUsers(query?: FilterUserListDto) {
-    const { role, search } = query ?? {};
+  async findAllUsers(query: FilterUserListDto, req: Request) {
+    const { role, search, page = '1', limit = '10' } = query ?? {};
+    const currentPage = parseInt(page, 10);
+    const take = parseInt(limit, 10);
+    const skip = (currentPage - 1) * take;
 
     const qb = this.userRepository.createQueryBuilder('user');
 
     if (role) {
-      qb.andWhere('user.role = :role', { role: role });
+      qb.andWhere('user.role = :role', { role });
     }
 
     if (search) {
@@ -74,7 +79,15 @@ export class UsersService {
       });
     }
 
-    return qb.orderBy('user.createdAt', 'DESC').getMany();
+    const [results, count] = await qb
+      .orderBy('user.createdAt', 'DESC')
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+    const data = results?.map((item) => {
+      return new UserResponseDto(item);
+    });
+    return new FullPaginationDto(currentPage, count, take, req, data);
   }
 
   async updateProfile(body: UpdateProfileDto, payload: JwtPayload) {
