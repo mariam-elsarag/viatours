@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>You're Invited – Activate Your Account</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      color: #333;
+    }
+
+    .otp {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .link {
+      margin-top: 20px;
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .link:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Welcome <%= fullName %>,</h2>
+
+  <p>You've been invited to join our platform. To activate your account, please use the OTP below:</p>
+
+  <div class="otp">
+    <%= otp %>
+  </div>
+
+  <p>Or click the button below to activate your account and get started:</p>
+
+  <a class="link" href="<%= frontendUrl %>/activate?email=<%= email %>">
+    Activate My Account
+  </a>
+
+  <p>This OTP is valid for <%= expire %> minutes.</p>
+
+  <p>If you did not expect this invitation, you can safely ignore this email.</p>
+</body>
+
+</html>

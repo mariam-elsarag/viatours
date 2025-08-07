@@ -24,7 +24,7 @@ export class VerifyOtpDto {
 }
 
 export class OtpQueryDto {
-  @IsEnum(['activate', 'forget'])
+  @IsEnum(['activate', 'forget', 'new_password'])
   @IsOptional()
   type?: string;
 }

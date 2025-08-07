@@ -22,6 +22,7 @@ import { AcceptFormData } from 'src/common/decorators/accept-form-data.decorator
 import { userRole } from 'src/utils/enum';
 import { FilterUserListDto } from './dto/user-query.dto';
 import { Request } from 'express';
+import { InviteUserDto } from './dto/invite-user-dto';
 
 @Controller('/api/user')
 export class UsersController {
@@ -63,6 +64,14 @@ export class UsersController {
     return this.usersService.remove(payload);
   }
 
+  // create new user by admin
+  @Post('/admin/create-user')
+  @Roles(userRole.ADMIN)
+  @UseGuards(AuthGuard)
+  @AcceptFormData()
+  inviteUsers(@Body() body: InviteUserDto) {
+    return this.usersService.inviteUser(body);
+  }
   // Delete by admin
   @Delete('/admin/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

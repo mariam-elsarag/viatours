@@ -34,7 +34,8 @@ export class AuthService {
    * @returns message explain that otp has send to user email
    */
   async register(body: RegisterDto) {
-    const { fullName, email, password, role, licenseNumber } = body;
+    const { fullName, email, password, role, licenseNumber, companyName } =
+      body;
 
     // check user exist
     const user = await this.userRepository.findOne({
@@ -61,6 +62,7 @@ export class AuthService {
       const newAgent = this.agentRepository.create({
         userId: newUser.id,
         licenseNumber,
+        companyName,
       });
       await this.agentRepository.save(newAgent);
     }
@@ -108,7 +110,13 @@ export class AuthService {
         'Your account has been permanently banned due to a violation of our terms.',
       );
     }
+
     // check password right
+    if (user.password == null) {
+      throw new BadRequestException(
+        'The email or password you entered is incorrect.',
+      );
+    }
     if (
       user.password &&
       !(await this.comparePassword(password, user.password))
@@ -144,6 +152,8 @@ export class AuthService {
 
     if (query.type === 'forget') {
       await this.mailerService.forgetPasswordEmail(email, user.fullName, otp);
+    } else if (query.type === 'new_password') {
+      await this.mailerService.inviteUserEmail(email, user.fullName, otp, 3);
     } else {
       await this.mailerService.activateAccountEmail(email, user.fullName, otp);
     }
@@ -176,7 +186,7 @@ export class AuthService {
       throw new BadRequestException('Invalid Otp');
     }
 
-    if (query.type === 'forget') {
+    if (query.type === 'forget' || query.type === 'new_password') {
       user.isPasswordReset = true;
     } else {
       user.status = AccountStatus.Active;
@@ -243,7 +253,7 @@ export class AuthService {
    * @param user
    * @returns Otp
    */
-  private async generateOtp(expire: number, user: User): Promise<string> {
+  async generateOtp(expire: number, user: User): Promise<string> {
     const otp = Math.floor(Math.random() * 900000 + 100000).toString();
     const hashedOtp = await this.hashPassword(otp);
     user.otp = hashedOtp;
@@ -260,6 +270,7 @@ export class AuthService {
     //check if user exist
     const user = await this.userRepository.findOne({
       where: { email: email.toLocaleLowerCase() },
+      relations: ['agent'],
     });
 
     if (!user) {

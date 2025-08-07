@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,11 +12,14 @@ import { Agent } from './entities/agent.entity';
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { JwtPayload } from 'src/utils/types';
 import { UserResponseDto } from './dto/user-response.dto';
-import { userRole } from 'src/utils/enum';
+import { AccountStatus, AgentStatus, userRole } from 'src/utils/enum';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { FilterUserListDto } from './dto/user-query.dto';
 import { FullPaginationDto } from 'src/common/pagination/pagination.dto';
 import { Request } from 'express';
+import { InviteUserDto } from './dto/invite-user-dto';
+import { AuthService } from 'src/auth/auth.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +27,8 @@ export class UsersService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+    private readonly authService: AuthService,
+    private readonly mailerService: MailService,
   ) {}
 
   async findOneUser(id: number) {
@@ -130,5 +136,44 @@ export class UsersService {
         'Access denied,you are not allow to preform this action',
       );
     }
+  }
+
+  // invite user
+  async inviteUser(body: InviteUserDto) {
+    const { fullName, email, role, licenseNumber, companyName } = body;
+    // check user exist
+    const user = await this.userRepository.findOne({
+      where: { email: email.toLocaleLowerCase() },
+    });
+    if (user) {
+      throw new BadRequestException({
+        message: 'Email already exists',
+        error: { email: 'Email already exists' },
+      });
+    }
+    let newUser = this.userRepository.create({
+      fullName,
+      email,
+      role: role ?? userRole.User,
+      status: AccountStatus.Active,
+    });
+    newUser = await this.userRepository.save(newUser);
+
+    if (role === userRole.Agent) {
+      const newAgent = this.agentRepository.create({
+        userId: newUser.id,
+        licenseNumber,
+        companyName,
+        status: AgentStatus.ACTIVE,
+      });
+      await this.agentRepository.save(newAgent);
+    }
+    // for activate account
+    const otp = await this.authService.generateOtp(3, newUser);
+    await this.mailerService.inviteUserEmail(email, fullName, otp, 3);
+    return {
+      message:
+        "Invitation successful. We've sent an invitation code to your email to activate your account.",
+    };
   }
 }

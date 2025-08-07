@@ -1,16 +1,15 @@
-import { userRole } from 'src/utils/enum';
 import {
   IsEmail,
-  IsString,
   IsEnum,
-  MaxLength,
-  IsStrongPassword,
   IsNotEmpty,
   IsOptional,
+  IsString,
+  MaxLength,
   ValidateIf,
 } from 'class-validator';
+import { userRole } from 'src/utils/enum';
 
-export class RegisterDto {
+export class InviteUserDto {
   @IsString()
   @MaxLength(80)
   @IsNotEmpty()
@@ -21,13 +20,9 @@ export class RegisterDto {
   @IsNotEmpty()
   email: string;
 
-  @IsStrongPassword()
-  @IsNotEmpty()
-  password: string;
-
-  @IsEnum([userRole.User, userRole.Agent], { message: 'Invalid role' })
+  @IsEnum(userRole, { message: 'Invalid role' })
   @IsOptional()
-  role?: userRole.User | userRole.Agent;
+  role?: userRole;
 
   @ValidateIf((o) => o.role === userRole.Agent)
   @IsString()

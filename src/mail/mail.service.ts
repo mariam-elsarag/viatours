@@ -8,6 +8,7 @@ type activateAccountContext = {
   frontendUrl?: string;
   dashboardUrl?: string;
   reason?: string;
+  expire?: number;
 };
 @Injectable()
 export class MailService {
@@ -36,6 +37,20 @@ export class MailService {
       fullName,
       email,
       otp,
+      frontendUrl: process.env.FRONT_SERVER || '',
+    });
+  }
+  async inviteUserEmail(
+    email: string,
+    fullName: string,
+    otp: string,
+    expire?: number,
+  ) {
+    await this.send(email, 'Invitation', 'invitation', {
+      fullName,
+      email,
+      otp,
+      expire,
       frontendUrl: process.env.FRONT_SERVER || '',
     });
   }

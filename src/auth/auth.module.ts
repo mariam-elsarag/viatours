@@ -10,5 +10,6 @@ import { Agent } from 'src/users/entities/agent.entity';
   controllers: [AuthController],
   providers: [AuthService],
   imports: [TypeOrmModule.forFeature([User, Agent]), MailModule],
+  exports: [AuthService],
 })
 export class AuthModule {}

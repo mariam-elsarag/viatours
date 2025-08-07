@@ -17,8 +17,8 @@ export class Agent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 80, nullable: true })
-  companyName: string | null;
+  @Column({ type: 'varchar', length: 80 })
+  companyName: string;
 
   @Column({ type: 'text', nullable: true })
   bio: string | null;
