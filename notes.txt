@@ -1,29 +1,23 @@
+=============
+=> Done
+============
+1- auth 
+ 1.1- login
+ 1.2- Registeration (agent, user)
+ 1.3 otp (send , verify)
+
+2- user
+  2.1- profile for all (delete and update)=> need to work on avatar
+  2.2 user list for admin
+=============
+=> To do
+=============
+
+1- application flow
+1.1- all application with search and filter
+1.2- approve or accept application 
 
 
 
-
-
-
-
-
-
-
-src/
-├── auth/
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   └── jwt.strategy.ts
-├── users/
-│   ├── users.controller.ts
-│   └── users.service.ts
-├── destinations/
-├── packages/
-├── bookings/
-├── reviews/
-├── common/
-│   ├── guards/
-│   ├── interceptors/
-│   ├── pipes/
-├── config/
-│   └── database.config.ts
-└── main.ts
+2- user flow 
+1.1 agent Registeration to add attachment

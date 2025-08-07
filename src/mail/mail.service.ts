@@ -2,14 +2,35 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, RequestTimeoutException } from '@nestjs/common';
 
 type activateAccountContext = {
-  fullName: string;
-  email: string;
-  otp: string;
-  frontendUrl: string;
+  fullName?: string;
+  email?: string;
+  otp?: string;
+  frontendUrl?: string;
+  dashboardUrl?: string;
+  reason?: string;
 };
 @Injectable()
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
+  async approveAgent(email: string, fullName: string) {
+    await this.send(email, 'Approve', 'agent-approved', {
+      fullName,
+      dashboardUrl: process.env.Agent_SERVER ?? '',
+    });
+  }
+  async rejectAgent(email: string, fullName: string, reason: string) {
+    await this.send(email, 'Rejection', 'agent-rejected', {
+      fullName,
+      reason,
+    });
+  }
+  async suspended(email: string, fullName: string, reason: string) {
+    await this.send(email, 'Suspended', 'agent-suspended', {
+      fullName,
+      reason,
+    });
+  }
+
   async activateAccountEmail(email: string, fullName: string, otp: string) {
     await this.send(email, 'Activate Account', 'activation', {
       fullName,

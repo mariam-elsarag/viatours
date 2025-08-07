@@ -23,9 +23,6 @@ export class Agent {
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
-  suspensionReason: string | null;
-
   @Column({ type: 'varchar', length: 20 })
   licenseNumber: string;
 
@@ -37,6 +34,12 @@ export class Agent {
 
   @Column({ type: 'enum', enum: AgentStatus, default: AgentStatus.PENDING })
   status: AgentStatus;
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  reason: string | null;
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  attachment: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

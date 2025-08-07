@@ -61,7 +61,7 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @OneToOne(() => Agent, (agent) => agent.user, { cascade: true })
+  @OneToOne(() => Agent, (agent) => agent.user, { cascade: true, eager: true })
   agent: Agent;
 
   @OneToOne(() => Location)

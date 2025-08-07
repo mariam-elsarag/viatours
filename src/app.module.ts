@@ -11,6 +11,8 @@ import { MailModule } from './mail/mail.module';
 import { LocationModule } from './location/location.module';
 import { Agent } from './users/entities/agent.entity';
 import { Location } from './location/entities/location.entity';
+import { AdminModule } from './admin/admin.module';
+import { ApplicationModule } from './application/application.module';
 @Module({
   imports: [
     AuthModule,
@@ -46,6 +48,10 @@ import { Location } from './location/entities/location.entity';
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
 
     LocationModule,
+
+    AdminModule,
+
+    ApplicationModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
