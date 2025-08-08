@@ -13,6 +13,8 @@ import { Agent } from './users/entities/agent.entity';
 import { Location } from './location/entities/location.entity';
 import { AdminModule } from './admin/admin.module';
 import { ApplicationModule } from './application/application.module';
+import { TestimonialModule } from './testimonial/testimonial.module';
+import { Testimonial } from './testimonial/entities/testimonial.entity';
 @Module({
   imports: [
     AuthModule,
@@ -41,7 +43,7 @@ import { ApplicationModule } from './application/application.module';
           port: config.get<number>('DB_PORT'),
           host: 'localhost',
           synchronize: process.env.NODE_ENV !== 'producation' ? true : false,
-          entities: [User, Agent, Location],
+          entities: [User, Agent, Location, Testimonial],
         };
       },
     }),
@@ -52,6 +54,8 @@ import { ApplicationModule } from './application/application.module';
     AdminModule,
 
     ApplicationModule,
+
+    TestimonialModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
